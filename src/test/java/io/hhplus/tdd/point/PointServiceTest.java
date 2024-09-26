@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.hhplus.tdd.point.repository.PointHistoryRepository;
+import io.hhplus.tdd.point.repository.PointRepository;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
 class PointServiceTest {
+
+  @Autowired
+  private PointRepository pointRepository;
 
   @InjectMocks
   @Autowired
@@ -85,4 +89,22 @@ class PointServiceTest {
       pointService.chargeUserPoint(id, chargeAmount);
     }, "충전할 포인트는 100원 이상이어야 합니다.");
   }
+
+  @Test
+  @DisplayName("특정 유저의 포인트 정보를 조회한다.")
+  void getUserPointTest() {
+    // given
+    pointRepository.insertOrUpdate(1L, 1000L);
+    pointRepository.insertOrUpdate(2L, 2000L);
+    pointRepository.insertOrUpdate(3L, 3000L);
+
+    // when
+    UserPoint userPoint = pointService.getUserPoint(1L);
+
+    // then
+    assertThat(userPoint.point()).isNotNull();
+    assertThat(userPoint).extracting("id", "point")
+        .contains(1L, 1000L);
+  }
+
 }

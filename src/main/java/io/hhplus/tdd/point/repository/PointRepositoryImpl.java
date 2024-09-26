@@ -13,5 +13,8 @@ public class PointRepositoryImpl implements PointRepository {
         return userPointTable.insertOrUpdate(id, amount);
     }
 
-
+    @Override
+    public UserPoint selectById(Long id) {
+        return userPointTable.selectById(id);
+    }
 }
