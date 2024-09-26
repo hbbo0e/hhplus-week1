@@ -1,7 +1,9 @@
 package io.hhplus.tdd.point;
 
 import static io.hhplus.tdd.point.TransactionType.CHARGE;
+import static io.hhplus.tdd.point.TransactionType.USE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.times;
@@ -107,4 +109,63 @@ class PointServiceTest {
         .contains(1L, 1000L);
   }
 
+  @Test
+  @DisplayName("특정 유저의 포인트를 사용한다.")
+  void userPointUseTest() {
+    // given
+    pointRepository.insertOrUpdate(1L, 1000L);
+    pointRepository.insertOrUpdate(2L, 2000L);
+    pointRepository.insertOrUpdate(3L, 3000L);
+
+    // when
+    UserPoint userPoint = pointService.userPointUse(1L, 700L);
+
+    // then
+    assertThat(userPoint.point()).isNotNull();
+    assertThat(userPoint).extracting("id", "point")
+        .contains(1L, 300L);
+  }
+
+  @Test
+  @DisplayName("포인트 사용 시 정보가 잘 저장 되었는지 확인한다.")
+  void userPointUseHistoryTest() {
+    // given
+    long id = 1L;
+    long userId = 1L;
+    long amount = 700L;
+
+    // 포인트 사용을 위한 초기 데이터 설정
+    pointRepository.insertOrUpdate(userId, 1000L);
+
+    // 포인트 사용 히스토리 Mock 설정
+    PointHistory useHistory = new PointHistory(id, userId, amount, USE, System.currentTimeMillis());
+    when(pointHistoryRepository.selectAllByUserId(userId)).thenReturn(List.of(useHistory));
+
+    // when
+    pointService.userPointUse(1L, 700L);
+    List<PointHistory> pointHistoryList = pointHistoryRepository.selectAllByUserId(1L);
+
+    // then
+    assertThat(pointHistoryList).hasSize(1);
+    assertThat(pointHistoryList).extracting( "userId", "amount", "type")
+        .containsExactlyInAnyOrder(
+            tuple(1L, 700L, USE)
+        );
+  }
+
+  @Test
+  @DisplayName("가지고 있는 포인트 보다 많은 포인트를 사용하려는 경우 예외가 발생한다.")
+  void usePointOverrideTest() {
+    // given
+    pointRepository.insertOrUpdate(1L, 1000L);
+    pointRepository.insertOrUpdate(2L, 2000L);
+    pointRepository.insertOrUpdate(3L, 3000L);
+
+    // when // then
+    assertThatThrownBy(() -> pointService.userPointUse(1L, 1001L))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("보유 포인트가 부족합니다.");
+  }
+
 }
+

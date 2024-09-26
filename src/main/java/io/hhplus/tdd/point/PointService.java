@@ -32,5 +32,26 @@ public class PointService {
         return pointRepository.selectById(id);
     }
 
+    public UserPoint userPointUse(long id, long amount) {
+
+        UserPoint userPoint = pointRepository.selectById(id);
+
+        if (userPoint.point() < amount)
+            throw new IllegalArgumentException("보유 포인트가 부족합니다.");
+
+        long usedPoint = usedPointCalculator(userPoint.point()- amount;
+        UserPoint resultUserPoint = insertUserPointOrUpdate(userPoint.id(), usedPoint);
+        pointHistoryRepository.insert(id, amount, USE, System.currentTimeMillis() % 1000);
+
+        return resultUserPoint;
+    }
+
+    private long usedPointCalculator(long userPoint, long minusAmount) {
+        return userPoint - minusAmount;
+    }
+
+    private UserPoint insertUserPointOrUpdate(long id, long amount) {
+        return pointRepository.insertOrUpdate(id, amount);
+    }
 
 }
