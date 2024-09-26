@@ -1,6 +1,5 @@
 package io.hhplus.tdd.point;
 
-
 import static io.hhplus.tdd.point.TransactionType.CHARGE;
 import static io.hhplus.tdd.point.TransactionType.USE;
 
@@ -9,6 +8,8 @@ import io.hhplus.tdd.point.repository.PointRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public class PointService {
             throw new IllegalArgumentException("충전 포인트는 100 이상이어야 합니다.");
         }
 
-        UserPoint userPoint = pointRepository.insertOrUpdate(id, amount);
+        UserPoint userPoint = insertUserPointOrUpdate(id, amount);
         pointHistoryRepository.insert(id, amount, CHARGE, System.currentTimeMillis() % 1000);
         return userPoint;
     }
@@ -39,7 +40,7 @@ public class PointService {
         if (userPoint.point() < amount)
             throw new IllegalArgumentException("보유 포인트가 부족합니다.");
 
-        long usedPoint = usedPointCalculator(userPoint.point()- amount;
+        long usedPoint = usedPointCalculator(userPoint.point(), amount);
         UserPoint resultUserPoint = insertUserPointOrUpdate(userPoint.id(), usedPoint);
         pointHistoryRepository.insert(id, amount, USE, System.currentTimeMillis() % 1000);
 
